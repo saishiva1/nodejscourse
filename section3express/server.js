@@ -1,9 +1,13 @@
 const express = require("express");
-const messagesController = require("./controller/messages.controller.js");
-const friendController = require("./controller/friends.controller");
+const path = require("path");
+const hbs = require('hbs')
+const friendsRouter = require("./routes/friends.router");
+const messagesRouter = require("./routes/messages.router");
 
 const app = express();
 
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
 const PORT = 3000;
 
 app.use((req, res, next) => {
@@ -13,21 +17,22 @@ app.use((req, res, next) => {
     const endtime = Date.now();
     console.log(endtime - starttime + "ms");
 });
+app.use('/site', express.static(path.join(__dirname, 'public')));
 app.use(express.json());
 
 app.get("/", (req, res) => {
-    res.send({ id: 1, message: "hello" });
+    res.render('index', {
+        title: 'hello',
+        caption: 'well well well'
+    })
 });
 
-app.get("/friends", friendController.getFriends);
+app.use("/friends", friendsRouter);
+app.use("/messages", messagesRouter);
 
-app.post("/friends", friendController.postFriend);
-
-app.get("/friends/:friendId", friendController.getFriend);
-
-app.get("/messages", messagesController.getMessages);
-
-app.post("/messages", messagesController.postMessage);
+app.use("*", (req, res) => {
+    res.send("<h1>404</h1>")
+})
 
 app.listen(PORT, () => {
     console.log(`running on ${PORT}`);
