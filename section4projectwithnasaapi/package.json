@@ -1,0 +1,15 @@
+{
+    "name": "section4projectwithnasaapi",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "server": "npm run watch --prefix server",
+        "client": "npm start --prefix client",
+        "watch": "npm run client & npm run server",
+        "deploy": "npm run build --prefix client && npm start --prefix server"
+    },
+    "author": "",
+    "license": "ISC"
+}
