@@ -34,7 +34,11 @@ function isHabitable(planet) {
   });
 }
 
+function getAllPlanets(){
+  return HabitableData;
+}
+
 module.exports = {
    loadData,
-   planets:HabitableData
+   getAllPlanets
 };
