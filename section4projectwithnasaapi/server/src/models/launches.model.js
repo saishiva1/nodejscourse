@@ -1,5 +1,6 @@
-const launches = new Map();
-let latestFlightNumber = 100;
+const launches = require('./launches.mongo');
+const planets = require('./planets.mongo');
+
 const launch = {
   flightNumber: 100,
   mission: "kelper mission 1",
@@ -11,35 +12,50 @@ const launch = {
   success: true,
 };
 
-launches.set(launch.flightNumber, launch);
+const DEFAULT_FLGHT_NUMBER =100;
 
-function existsLaunchById(id){
-  return launches.has(+id);
+saveLaunch(launch);
+
+async function saveLaunch(launch){
+  const planet = await planets.find({kepler_name:launch.target});
+  
+  if(!planet){
+    throw new Error('No planet found')
+  }
+  
+  await launches.findOneAndUpdate({
+    flightNumber: launch.flightNumber,
+  },launch ,{upsert:true})
+};
+
+async function existsLaunchById(id){
+  return await launches.findOne({flightNumber:+id});
 }
 
-function getAllLaunches() {
-  return Array.from(launches.values());
+async function getAllLaunches() {
+  return await launches.find({},{'__id':0,'__v':0});
 }
 
-function addNewLaunch(launch) {
-  latestFlightNumber++;
-  launches.set(
-    latestFlightNumber,
-    Object.assign(launch, {
-      flightNumber: latestFlightNumber,
-      customer: ["ZMN", "NASA"],
-      upcoming: true,
-      success: true,
-    })
-  );
+async function getLatestFlightNumber(){
+  const latestLaunch = await launches.findOne().sort('-flightNumber');
+  if(!latestLaunch){
+    return DEFAULT_FLGHT_NUMBER;
+  }
+  return latestLaunch.flightNumber + 1;
 }
 
-function abortLaunchByFlightNumber(flightNumber){
-  const aborted=launches.get(+flightNumber);
-  aborted.upcoming = false;
-  aborted.success = false;
+async function addNewLaunch(launch) {
+  const flightNumber=await getLatestFlightNumber();
+  await saveLaunch(Object.assign(launch, {
+    flightNumber,
+    customer: ["ZMN", "NASA"]
+  }));
+}
 
-  return aborted;
+async function abortLaunchByFlightNumber(flightNumber){
+  const aborted= await launches.updateOne({flightNumber:+flightNumber},{upcoming:false,success:false});
+  console.log(aborted)
+  return aborted.modifiedCount===1;
 }
 
 module.exports = {
